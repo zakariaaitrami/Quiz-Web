@@ -24,6 +24,14 @@ questions = [
 container = document.getElementById('questionsContainer');
 result = document.getElementById('result');
 
+function escapeHTML(text) {
+   return text
+   
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  
+}
+
 function afficherQuestions() {
   for (i = 0; i < questions.length; i++) {
     section = document.createElement('div');
@@ -33,6 +41,9 @@ function afficherQuestions() {
     titre.innerHTML = '<strong>Q' + (i+1) + '.</strong> ' + questions[i].q;
 
     section.appendChild(titre);
+
+    optionsWrapper = document.createElement('div');
+    optionsWrapper.className = 'options';
 
     for (j = 0; j < questions[i].opts.length; j++) {
       label = document.createElement('label');
@@ -44,32 +55,65 @@ function afficherQuestions() {
       input.value = j;
 
       label.appendChild(input);
-      label.appendChild(document.createTextNode(' ' + questions[i].opts[j]));
+      span = document.createElement('span');
+      span.textContent = questions[i].opts[j]; 
+      label.appendChild(span);
 
-      section.appendChild(label);
-      
-      section.appendChild(document.createElement('br'));
+
+      optionsWrapper.appendChild(label);
     }
 
+    section.appendChild(optionsWrapper);
     container.appendChild(section);
   }
 }
 
+
 function corriger() {
   score = 0;
+  let feedback = '<div class="score-header">Votre score est : <strong id="scoreDisplay">0</strong> / ' + questions.length + '</div>';
+  let resultDetails = '<div class="result-details">';
 
   for (i = 0; i < questions.length; i++) {
     radios = document.getElementsByName('q' + i);
+    let userAnswer ;
+    let isCorrect = false;
 
+   
     for (j = 0; j < radios.length; j++) {
-      if (radios[j].checked && j == questions[i].ans) {
-        score = score + 1;
+      if (radios[j].checked) {
+        userAnswer = j;
+        if (j == questions[i].ans) {
+          score = score + 1;
+          isCorrect = true;
+        }
       }
     }
+
+   
+    resultDetails += '<div class="question-result ' + (isCorrect ? 'correct' : 'incorrect') + '">';
+    resultDetails += '<p class="q-text"><strong>Q' + (i + 1) + '.</strong> ' + questions[i].q + '</p>';
+    
+    if (isCorrect) {
+      resultDetails += '<p class="feedback-correct">✓ Correct! Votre réponse: <span style="color: #4caf50; font-weight: bold;">' + (userAnswer >= 0 ? escapeHTML(questions[i].opts[userAnswer]) : 'Aucune réponse') + '</span></p>';
+    } else {
+      resultDetails += '<p class="feedback-incorrect">✗ Incorrect!</p>';
+      if (userAnswer >= 0) {
+        resultDetails += '<p class="your-answer">Votre réponse: <span style="color: #f44336; font-weight: bold;">' + escapeHTML(questions[i].opts[userAnswer]) + '</span></p>';
+      }
+      resultDetails += '<p class="correct-answer">Bonne réponse: <span style="color: #4caf50; font-weight: bold;">' + escapeHTML(questions[i].opts[questions[i].ans]) + '</span></p>';
+    }
+
+   
+
+    resultDetails += '</div>';
   }
 
+  resultDetails += '</div>';
+
   result.hidden = false;
-  result.innerHTML = 'Votre score est : ' + score + ' / ' + questions.length;
+  result.innerHTML = feedback + resultDetails;
+  document.getElementById('scoreDisplay').textContent = score;
 }
 
 
